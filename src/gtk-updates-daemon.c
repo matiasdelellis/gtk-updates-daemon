@@ -26,9 +26,6 @@
 
 #define _(x) x
 
-PkControl *control = NULL;
-PkTask *task = NULL;
-
 /*
  * Notificacions
  */
@@ -180,7 +177,7 @@ out:
 }
 
 static void
-gud_check_updates (void)
+gud_check_updates (PkTask *task)
 {
 	/* get new update list */
 
@@ -191,7 +188,7 @@ gud_check_updates (void)
 	                             NULL, //cancellable,
 	                             NULL, NULL,
 	                             (GAsyncReadyCallback) gud_check_updates_finished,
-	                             NULL);
+	                             task);
 }
 
 /*
@@ -205,6 +202,8 @@ gud_refresh_package_cache_finished (GObject      *object,
 	PkResults *results;
 	GError *error = NULL;
 	PkError *error_code = NULL;
+
+	PkTask *task = PK_TASK(data);
 
 	/* get the results */
 	results = pk_client_generic_finish (PK_CLIENT(object), res, &error);
@@ -231,7 +230,7 @@ gud_refresh_package_cache_finished (GObject      *object,
 
 	g_debug ("Refresh package database finished");
 
-	gud_check_updates ();
+	gud_check_updates (task);
 
 out:
 	if (error_code != NULL)
@@ -241,7 +240,7 @@ out:
 }
 
 static void
-gud_refresh_package_cache (void)
+gud_refresh_package_cache (PkTask *task)
 {
 	g_debug ("Refresh package database");
 
@@ -250,7 +249,7 @@ gud_refresh_package_cache (void)
 	                               NULL,
 	                               NULL, NULL,
 	                               (GAsyncReadyCallback) gud_refresh_package_cache_finished,
-	                                NULL);
+	                                task);
 }
 
 /*
@@ -264,6 +263,9 @@ gud_get_time_since_last_resfresh_finished (GObject      *object,
 	GError *error = NULL;
 	guint seconds;
 
+	PkControl *control = PK_CONTROL (object);
+	PkTask *task = PK_TASK(data);
+
 	/* get the result */
 	seconds = pk_control_get_time_since_action_finish (control, res, &error);
 
@@ -276,10 +278,10 @@ gud_get_time_since_last_resfresh_finished (GObject      *object,
 	g_debug ("Time since the last database refresh %u", seconds);
 
 	if (seconds > TRESHOLD) {
-		gud_refresh_package_cache ();
+		gud_refresh_package_cache (task);
 	}
 	else {
-		gud_check_updates ();
+		gud_check_updates (task);
 	}
 }
 
@@ -287,6 +289,9 @@ int
 main (int   argc,
       char *argv[])
 {
+	PkControl *control = NULL;
+	PkTask *task = NULL;
+
 	notify_init ("gtk-updates-daemon");
 
 	gtk_init (&argc, &argv);
@@ -308,7 +313,7 @@ main (int   argc,
 	                                        PK_ROLE_ENUM_REFRESH_CACHE,
 	                                        NULL,
 	                                        (GAsyncReadyCallback) gud_get_time_since_last_resfresh_finished,
-	                                        NULL);
+	                                        task);
 
 	/* Main loop */
 	gtk_main ();
