@@ -60,68 +60,21 @@ libnotify_action_cb (NotifyNotification *notification,
 	notify_notification_close (notification, NULL);
 }
 
-/*
- * Check updates.
- */
 static void
-gud_check_updates_finished (GObject      *object,
-                            GAsyncResult *res,
-                            gpointer      data)
+gud_notfy_updates (GPtrArray *packages)
 {
 	const gchar *title;
 	gboolean ret;
-	gchar *name = NULL;
 	GError *error = NULL;
-	GPtrArray *array = NULL;
 	GString *string = NULL;
 	guint i;
 	NotifyNotification *notification;
-	PkClient *client = PK_CLIENT(object);
 	PkPackage *item;
-	PkError *error_code = NULL;
-	PkResults *results;
-	PkUpdateStateEnum state;
-
-	/* get the results */
-	results = pk_client_generic_finish (PK_CLIENT(client), res, &error);
-	if (results == NULL) {
-		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-			g_debug ("Query updates was cancelled");
-			g_error_free (error);
-			return;
-		}
-		if (error->domain != PK_CLIENT_ERROR ||
-			error->code != PK_CLIENT_ERROR_NOT_SUPPORTED) {
-			g_warning ("failed to get upgrades: %s",
-			           error->message);
-		}
-		g_error_free (error);
-		goto out;
-	}
-
-	/* check error code */
-	error_code = pk_results_get_error_code (results);
-	if (error_code != NULL) {
-		g_warning ("failed to get upgrades: %s, %s",
-		           pk_error_enum_to_string (pk_error_get_code (error_code)),
-		           pk_error_get_details (error_code));
-		goto out;
-	}
-
-	/* process results */
-	array = pk_results_get_package_array(results);
-
-	/* any updates? */
-	if (array->len == 0) {
-		g_message ("no upgrades\n");
-		gtk_main_quit ();
-		goto out;
-	}
 
 	/* find the upgrade string */
 	string = g_string_new ("");
-	for (i=0; i < array->len; i++) {
-		item = (PkPackage *) g_ptr_array_index (array, i);
+	for (i=0; i < packages->len; i++) {
+		item = (PkPackage *) g_ptr_array_index (packages, i);
 		g_string_append_printf (string, "%s (%s)\n",
 		                        pk_package_get_name (item),
 		                        pk_package_get_version(item));
@@ -158,6 +111,60 @@ gud_check_updates_finished (GObject      *object,
 	if (!ret) {
 		g_warning ("error: %s", error->message);
 		g_error_free (error);
+		gtk_main_quit ();
+	}
+}
+
+/*
+ * Check updates.
+ */
+static void
+gud_check_updates_finished (GObject      *object,
+                            GAsyncResult *res,
+                            gpointer      data)
+{
+	GError *error = NULL;
+	GPtrArray *array = NULL;
+	GString *string = NULL;
+	PkClient *client = PK_CLIENT(object);
+	PkError *error_code = NULL;
+	PkResults *results;
+
+	/* get the results */
+	results = pk_client_generic_finish (PK_CLIENT(client), res, &error);
+	if (results == NULL) {
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+			g_debug ("Query updates was cancelled");
+			g_error_free (error);
+			return;
+		}
+		if (error->domain != PK_CLIENT_ERROR ||
+			error->code != PK_CLIENT_ERROR_NOT_SUPPORTED) {
+			g_warning ("failed to get upgrades: %s",
+			           error->message);
+		}
+		g_error_free (error);
+		goto out;
+	}
+
+	/* check error code */
+	error_code = pk_results_get_error_code (results);
+	if (error_code != NULL) {
+		g_warning ("failed to get upgrades: %s, %s",
+		           pk_error_enum_to_string (pk_error_get_code (error_code)),
+		           pk_error_get_details (error_code));
+		goto out;
+	}
+
+	/* process results */
+	array = pk_results_get_package_array(results);
+
+	/* have updates? */
+	if (array->len > 0) {
+		gud_notfy_updates (array);
+	}
+	else {
+		g_message ("no upgrades\n");
 		gtk_main_quit ();
 	}
 
@@ -256,7 +263,6 @@ gud_get_time_since_last_resfresh_finished (GObject      *object,
 {
 	GError *error = NULL;
 	guint seconds;
-	guint thresh;
 
 	/* get the result */
 	seconds = pk_control_get_time_since_action_finish (control, res, &error);
