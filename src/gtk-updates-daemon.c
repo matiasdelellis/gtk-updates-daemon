@@ -21,6 +21,8 @@
 #include <packagekit-glib2/packagekit.h>
 #include <libnotify/notify.h>
 
+#include "gud-sync-helper.h"
+
 #define TRESHOLD 3600
 #define BINDIR "/usr/bin"
 
@@ -252,45 +254,14 @@ gud_refresh_package_cache (PkTask *task)
 	                                task);
 }
 
-/*
- * Check database age.
- */
-static void
-gud_get_time_since_last_resfresh_finished (GObject      *object,
-                                           GAsyncResult *res,
-                                           gpointer      data)
-{
-	GError *error = NULL;
-	guint seconds;
-
-	PkControl *control = PK_CONTROL (object);
-	PkTask *task = PK_TASK(data);
-
-	/* get the result */
-	seconds = pk_control_get_time_since_action_finish (control, res, &error);
-
-	if (seconds == 0) {
-		g_warning ("failed to get time: %s", error->message);
-		g_error_free (error);
-		return;
-	}
-
-	g_debug ("Time since the last database refresh %u", seconds);
-
-	if (seconds > TRESHOLD) {
-		gud_refresh_package_cache (task);
-	}
-	else {
-		gud_check_updates (task);
-	}
-}
-
 int
 main (int   argc,
       char *argv[])
 {
 	PkControl *control = NULL;
 	PkTask *task = NULL;
+	GError *error = NULL;
+	guint seconds;
 
 	notify_init ("gtk-updates-daemon");
 
@@ -307,13 +278,23 @@ main (int   argc,
 
 	/* get the time since the last refresh */
 
-	g_debug ("Getting the time since the last database refresh");
+	seconds = gud_control_get_time_since_action_sync (control,
+	                                                  PK_ROLE_ENUM_REFRESH_CACHE,
+	                                                  NULL,
+	                                                  &error);
 
-	pk_control_get_time_since_action_async (control,
-	                                        PK_ROLE_ENUM_REFRESH_CACHE,
-	                                        NULL,
-	                                        (GAsyncReadyCallback) gud_get_time_since_last_resfresh_finished,
-	                                        task);
+	if (seconds == 0 || error != NULL) {
+		g_warning ("failed to get time: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+
+	if (seconds > TRESHOLD) {
+		gud_refresh_package_cache (task);
+	}
+	else {
+		gud_check_updates (task);
+	}
 
 	/* Main loop */
 	gtk_main ();
