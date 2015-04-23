@@ -36,6 +36,7 @@ static void
 on_notification_closed (NotifyNotification *notification, gpointer data)
 {
 	g_object_unref (notification);
+	gtk_main_quit ();
 }
 
 static void
@@ -46,10 +47,6 @@ libnotify_action_cb (NotifyNotification *notification,
 	gboolean ret;
 	GError *error = NULL;
 
-	notify_notification_close (notification, NULL);
-	if (g_strcmp0 (action, "ignore") == 0)
-		return;
-
 	if (g_strcmp0 (action, "show-update-viewer") == 0) {
 		ret = g_spawn_command_line_async (BINDIR "/gpk-update-viewer",
 		                                  &error);
@@ -58,8 +55,9 @@ libnotify_action_cb (NotifyNotification *notification,
 			           error->message);
 			g_error_free (error);
 		}
-		return;
 	}
+
+	notify_notification_close (notification, NULL);
 }
 
 /*
@@ -116,6 +114,7 @@ gud_check_updates_finished (GObject      *object,
 	/* any updates? */
 	if (array->len == 0) {
 		g_message ("no upgrades\n");
+		gtk_main_quit ();
 		goto out;
 	}
 
@@ -159,6 +158,7 @@ gud_check_updates_finished (GObject      *object,
 	if (!ret) {
 		g_warning ("error: %s", error->message);
 		g_error_free (error);
+		gtk_main_quit ();
 	}
 
 out:
