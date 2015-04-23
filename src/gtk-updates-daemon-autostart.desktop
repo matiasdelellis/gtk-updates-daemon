@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=gtk-updates-daemon
+Comment=Checks for updates when start session
+TryExec=gtk-updates-daemon
+Exec=gtk-updates-daemon
+Icon=software-update-available
+Terminal=false
+Hidden=true
