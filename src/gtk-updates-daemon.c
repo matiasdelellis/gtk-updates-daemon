@@ -22,11 +22,17 @@
 #include <libnotify/notify.h>
 
 #include "gud-sync-helper.h"
+#include "gud-pk-progress-bar.h"
 
 #define TRESHOLD 3600
 #define BINDIR "/usr/bin"
 
 #define _(x) x
+
+static GudPkProgressBar *progressbar = NULL;
+
+static void
+gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer data);
 
 /*
  * Notificacions
@@ -129,6 +135,8 @@ gud_check_updates_finished (GObject      *object,
 	PkError *error_code = NULL;
 	PkResults *results;
 
+	gud_pk_progress_bar_end (progressbar);
+
 	/* get the results */
 	results = pk_client_generic_finish (PK_CLIENT(client), res, &error);
 	if (results == NULL) {
@@ -188,7 +196,7 @@ gud_check_updates (PkTask *task)
 	pk_client_get_updates_async (PK_CLIENT(task),
 	                             pk_bitfield_value (PK_FILTER_ENUM_NONE),
 	                             NULL, //cancellable,
-	                             NULL, NULL,
+	                             (PkProgressCallback) gud_console_progress_cb, NULL,
 	                             (GAsyncReadyCallback) gud_check_updates_finished,
 	                             task);
 }
@@ -206,6 +214,8 @@ gud_refresh_package_cache_finished (GObject      *object,
 	PkError *error_code = NULL;
 
 	PkTask *task = PK_TASK(data);
+
+	gud_pk_progress_bar_end (progressbar);
 
 	/* get the results */
 	results = pk_client_generic_finish (PK_CLIENT(object), res, &error);
@@ -249,10 +259,48 @@ gud_refresh_package_cache (PkTask *task)
 	pk_client_refresh_cache_async (PK_CLIENT(task),
 	                               TRUE,
 	                               NULL,
-	                               NULL, NULL,
+	                               (PkProgressCallback) gud_console_progress_cb, NULL,
 	                               (GAsyncReadyCallback) gud_refresh_package_cache_finished,
 	                                task);
 }
+
+/*
+ * Helper to print progress to console.
+ * Based on: https://github.com/hughsie/PackageKit/blob/master/client/pk-console.c
+ */
+
+static void
+gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer data)
+{
+	gint percentage;
+	PkStatusEnum status;
+	PkRoleEnum role;
+	const gchar *text;
+
+	/* role */
+	if (type == PK_PROGRESS_TYPE_ROLE) {
+		g_object_get (progress,
+		              "role", &role,
+		              NULL);
+		if (role == PK_ROLE_ENUM_UNKNOWN)
+			return;
+		/* show new status on the bar */
+		text = pk_role_enum_to_localised_present (role);
+		gud_pk_progress_bar_start (progressbar, text);
+	}
+
+	/* percentage */
+	if (type == PK_PROGRESS_TYPE_PERCENTAGE) {
+		g_object_get (progress,
+		              "percentage", &percentage,
+		              NULL);
+		gud_pk_progress_bar_set_percentage (progressbar, percentage);
+	}
+}
+
+/*
+ * Main code.
+ */
 
 int
 main (int   argc,
@@ -267,6 +315,8 @@ main (int   argc,
 
 	gtk_init (&argc, &argv);
 
+	/* Minimun package kit init. */
+
 	control = pk_control_new ();
 
 	task = pk_task_new ();
@@ -275,6 +325,12 @@ main (int   argc,
 	              "interactive", FALSE,
 	              "only-download", TRUE,
 	              NULL);
+
+	/* Helper to print progress on console. */
+
+	progressbar = gud_pk_progress_bar_new ();
+	gud_pk_progress_bar_set_size (progressbar, 60);
+	gud_pk_progress_bar_set_padding (progressbar, 30);
 
 	/* get the time since the last refresh */
 
@@ -297,10 +353,16 @@ main (int   argc,
 	}
 
 	/* Main loop */
+
 	gtk_main ();
+
+	/* Close main loop. */
 
 	g_object_unref (control);
 	g_object_unref (task);
+
+	if (progressbar != NULL)
+		g_object_unref (progressbar);
 
 	notify_uninit ();
 
