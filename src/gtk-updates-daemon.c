@@ -30,6 +30,7 @@
 #define _(x) x
 
 static GudPkProgressBar *progressbar = NULL;
+static GCancellable *cancellable = NULL;
 
 static void
 gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer data);
@@ -195,7 +196,7 @@ gud_check_updates (PkTask *task)
 
 	pk_client_get_updates_async (PK_CLIENT(task),
 	                             pk_bitfield_value (PK_FILTER_ENUM_NONE),
-	                             NULL, //cancellable,
+	                             cancellable,
 	                             (PkProgressCallback) gud_console_progress_cb, NULL,
 	                             (GAsyncReadyCallback) gud_check_updates_finished,
 	                             task);
@@ -258,7 +259,7 @@ gud_refresh_package_cache (PkTask *task)
 
 	pk_client_refresh_cache_async (PK_CLIENT(task),
 	                               TRUE,
-	                               NULL,
+	                               cancellable,
 	                               (PkProgressCallback) gud_console_progress_cb, NULL,
 	                               (GAsyncReadyCallback) gud_refresh_package_cache_finished,
 	                                task);
@@ -302,6 +303,14 @@ gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer dat
  * Main code.
  */
 
+static void
+gud_console_sigint_cb (int sig)
+{
+	g_debug ("Handling SIGINT");
+
+	g_cancellable_cancel (cancellable);
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -326,6 +335,11 @@ main (int   argc,
 	              "only-download", TRUE,
 	              NULL);
 
+	/* Cancel wit ctl+c */
+
+	signal (SIGINT, gud_console_sigint_cb);
+	cancellable = g_cancellable_new ();
+
 	/* Helper to print progress on console. */
 
 	progressbar = gud_pk_progress_bar_new ();
@@ -336,7 +350,7 @@ main (int   argc,
 
 	seconds = gud_control_get_time_since_action_sync (control,
 	                                                  PK_ROLE_ENUM_REFRESH_CACHE,
-	                                                  NULL,
+	                                                  cancellable,
 	                                                  &error);
 
 	if (seconds == 0 || error != NULL) {
@@ -360,6 +374,8 @@ main (int   argc,
 
 	g_object_unref (control);
 	g_object_unref (task);
+
+	g_object_unref (cancellable);
 
 	if (progressbar != NULL)
 		g_object_unref (progressbar);
