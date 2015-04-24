@@ -303,12 +303,12 @@ gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer dat
  * Main code.
  */
 
-static void
-gud_console_sigint_cb (int sig)
+static gboolean
+gud_console_sigint_cb (gpointer user_data)
 {
 	g_debug ("Handling SIGINT");
-
 	g_cancellable_cancel (cancellable);
+	return FALSE;
 }
 
 int
@@ -337,7 +337,11 @@ main (int   argc,
 
 	/* Cancel wit ctl+c */
 
-	signal (SIGINT, gud_console_sigint_cb);
+	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+	                        SIGINT,
+	                        gud_console_sigint_cb,
+	                        NULL,
+	                        NULL);
 	cancellable = g_cancellable_new ();
 
 	/* Helper to print progress on console. */
