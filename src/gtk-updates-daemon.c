@@ -17,6 +17,13 @@
 
 #define I_KNOW_THE_PACKAGEKIT_GLIB2_API_IS_SUBJECT_TO_CHANGE
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <glib.h>
+#include <glib/gi18n.h>
+
 #include <gtk/gtk.h>
 #include <packagekit-glib2/packagekit.h>
 #include <libnotify/notify.h>
@@ -26,8 +33,6 @@
 
 #define TRESHOLD 3600
 #define BINDIR "/usr/bin"
-
-#define _(x) x
 
 static GudPkProgressBar *progressbar = NULL;
 static GCancellable *cancellable = NULL;
@@ -319,6 +324,10 @@ main (int   argc,
 	PkTask *task = NULL;
 	GError *error = NULL;
 	guint seconds;
+
+	bindtextdomain (GETTEXT_PACKAGE, GUD_LOCALE_DIR);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+	textdomain (GETTEXT_PACKAGE);
 
 	notify_init ("gtk-updates-daemon");
 

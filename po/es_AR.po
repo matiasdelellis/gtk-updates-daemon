@@ -1,0 +1,37 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-10-21 14:54-0300\n"
+"PO-Revision-Date: 2015-10-21 15:09-0300\n"
+"Last-Translator: Matias De lellis <mati86dl@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.10\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: es_AR\n"
+
+#: ../src/gtk-updates-daemon.c:92
+msgid "Distribution updates available"
+msgstr "Actualizaciones de distribución disponibles"
+
+#: ../src/gtk-updates-daemon.c:98
+msgid "Software Updates"
+msgstr "Actualizaciones de software"
+
+#. TRANSLATORS: don't install updates now
+#: ../src/gtk-updates-daemon.c:104
+msgid "Not Now"
+msgstr "Ahora no"
+
+#. TRANSLATORS: button: open the update viewer to install updates
+#: ../src/gtk-updates-daemon.c:109
+msgid "Install updates"
+msgstr "Instalar actualizaciones"

@@ -1,0 +1,4 @@
+src/gud-sync-helper.c
+src/gud-sync-helper.h
+src/gud-pk-progress-bar.c
+src/gud-pk-progress-bar.h

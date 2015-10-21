@@ -1,4 +1,11 @@
 bin_PROGRAMS = gtk-updates-daemon
+
+AM_CPPFLAGS = \
+	-I$(top_srcdir)                       \
+	-I$(top_srcdir)/src                   \
+	-DG_LOG_DOMAIN=\"gtk-updates-daemon\" \
+	-DGUD_LOCALE_DIR=\""$(datadir)/locale"\"
+
 gtk_updates_daemon_SOURCES = 	\
 	gtk-updates-daemon.c \
 	gud-sync-helper.c \

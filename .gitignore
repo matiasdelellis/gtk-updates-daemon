@@ -18,3 +18,7 @@ src/gtk-updates-daemon
 /Makefile.in
 /missing
 /src/Makefile.in
+/autom4te.cache/output.3
+/autom4te.cache/output.4
+/autom4te.cache/traces.3
+/autom4te.cache/traces.4
