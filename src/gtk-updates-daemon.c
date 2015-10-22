@@ -22,6 +22,7 @@
 #endif
 
 #include <glib.h>
+#include <glib-unix.h>
 #include <glib/gi18n.h>
 
 #include <gtk/gtk.h>
@@ -369,7 +370,7 @@ main (int   argc,
 	if (seconds == 0 || error != NULL) {
 		g_warning ("failed to get time: %s", error->message);
 		g_error_free (error);
-		return;
+		return 0;
 	}
 
 	if (seconds > TRESHOLD) {
