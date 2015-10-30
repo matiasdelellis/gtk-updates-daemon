@@ -373,7 +373,6 @@ gud_pk_progress_bar_init (GudPkProgressBar *self)
 		self->priv->tty_fd = open ("/dev/console", O_RDWR, 0);
 	if (self->priv->tty_fd < 0)
 		self->priv->tty_fd = open ("/dev/stdout", O_RDWR, 0);
-	g_assert (self->priv->tty_fd > 0);
 }
 
 /**
@@ -386,5 +385,11 @@ gud_pk_progress_bar_new (void)
 {
 	GudPkProgressBar *self;
 	self = g_object_new (GUD_PK_TYPE_PROGRESS_BAR, NULL);
-	return GUD_PK_PROGRESS_BAR (self);
+
+	if (self->priv->tty_fd < 0) {
+		g_object_unref (self);
+		self = NULL;
+	}
+
+	return self;
 }

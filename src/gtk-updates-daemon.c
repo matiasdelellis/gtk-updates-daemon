@@ -142,7 +142,8 @@ gud_check_updates_finished (GObject      *object,
 	PkError *error_code = NULL;
 	PkResults *results;
 
-	gud_pk_progress_bar_end (progressbar);
+	if (progressbar)
+		gud_pk_progress_bar_end (progressbar);
 
 	/* get the results */
 	results = pk_client_generic_finish (PK_CLIENT(client), res, &error);
@@ -222,7 +223,8 @@ gud_refresh_package_cache_finished (GObject      *object,
 
 	PkTask *task = PK_TASK(data);
 
-	gud_pk_progress_bar_end (progressbar);
+	if (progressbar)
+		gud_pk_progress_bar_end (progressbar);
 
 	/* get the results */
 	results = pk_client_generic_finish (PK_CLIENT(object), res, &error);
@@ -283,6 +285,9 @@ gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer dat
 	PkStatusEnum status;
 	PkRoleEnum role;
 	const gchar *text;
+
+	if (!progressbar)
+		return;
 
 	/* role */
 	if (type == PK_PROGRESS_TYPE_ROLE) {
@@ -357,8 +362,10 @@ main (int   argc,
 	/* Helper to print progress on console. */
 
 	progressbar = gud_pk_progress_bar_new ();
-	gud_pk_progress_bar_set_size (progressbar, 60);
-	gud_pk_progress_bar_set_padding (progressbar, 30);
+	if (progressbar) {
+		gud_pk_progress_bar_set_size (progressbar, 60);
+		gud_pk_progress_bar_set_padding (progressbar, 30);
+	}
 
 	/* get the time since the last refresh */
 
