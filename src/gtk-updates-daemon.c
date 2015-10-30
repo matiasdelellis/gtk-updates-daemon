@@ -79,18 +79,23 @@ gud_notfy_updates (GPtrArray *packages)
 	gboolean ret;
 	GError *error = NULL;
 	GString *string = NULL;
-	guint i;
+	guint i, len;
 	NotifyNotification *notification;
 	PkPackage *item;
 
 	/* find the upgrade string */
 	string = g_string_new ("");
-	for (i=0; i < packages->len; i++) {
+	len = (packages->len > 10) ? 10 : packages->len;
+
+	for (i = 0; i < len; i++) {
 		item = (PkPackage *) g_ptr_array_index (packages, i);
 		g_string_append_printf (string, "%s (%s)\n",
 		                        pk_package_get_name (item),
 		                        pk_package_get_version(item));
 	}
+
+	if (packages->len > 10)
+		g_string_append_printf (string, _("And others..."));
 
 	if (string->len != 0)
 		g_string_set_size (string, string->len-1);
