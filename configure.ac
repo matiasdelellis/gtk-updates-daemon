@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([gtk-updates-daemon], [0.1.91], [mati86dl@gmail.com])
+AC_INIT([gtk-updates-daemon], [0.1.92], [mati86dl@gmail.com])
 AM_INIT_AUTOMAKE([1.9.6 -Wall -Werror dist-bzip2])
 
 AC_PROG_CC

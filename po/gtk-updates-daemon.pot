@@ -3,40 +3,39 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-30 11:59-0300\n"
-"PO-Revision-Date: 2015-10-30 11:59-0300\n"
-"Last-Translator: Matias De lellis <mati86dl@gmail.com>\n"
-"Language-Team: \n"
-"Language: es_AR\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.6.10\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: ../src/gtk-updates-daemon.c:98
 #, c-format
 msgid "And others..."
-msgstr "Y otros..."
+msgstr ""
 
 #: ../src/gtk-updates-daemon.c:103
 msgid "Distribution updates available"
-msgstr "Actualizaciones de distribución disponibles"
+msgstr ""
 
 #: ../src/gtk-updates-daemon.c:109
 msgid "Software Updates"
-msgstr "Actualizaciones de software"
+msgstr ""
 
 #. TRANSLATORS: don't install updates now
 #: ../src/gtk-updates-daemon.c:115
 msgid "Not Now"
-msgstr "Ahora no"
+msgstr ""
 
 #. TRANSLATORS: button: open the update viewer to install updates
 #: ../src/gtk-updates-daemon.c:120
 msgid "Install updates"
-msgstr "Instalar actualizaciones"
+msgstr ""
