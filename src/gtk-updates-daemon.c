@@ -35,6 +35,11 @@
 #define TRESHOLD 3600
 #define BINDIR "/usr/bin"
 
+#define GSETTINGS_SCHEMA "org.gtk.UpdatesDaemon"
+#define GSETTINGS_KEY_ENABLED "enabled"
+#define GSETTINGS_KEY_TIMEOUT "notification-timeout"
+
+static GSettings *gsettings = NULL;
 static GudPkProgressBar *progressbar = NULL;
 static GCancellable *cancellable = NULL;
 
@@ -79,7 +84,7 @@ gud_notfy_updates (GPtrArray *packages)
 	gboolean ret;
 	GError *error = NULL;
 	GString *string = NULL;
-	guint i, len;
+	guint i, len, timeout;
 	NotifyNotification *notification;
 	PkPackage *item;
 
@@ -107,8 +112,11 @@ gud_notfy_updates (GPtrArray *packages)
 
 	notify_notification_set_hint_string (notification, "desktop-entry", "gtk-updates-daemon");
 	notify_notification_set_app_name (notification, _("Software Updates"));
-	notify_notification_set_timeout (notification, NOTIFY_EXPIRES_NEVER);
 	notify_notification_set_urgency (notification, NOTIFY_URGENCY_NORMAL);
+
+	timeout = g_settings_get_int (gsettings, GSETTINGS_KEY_TIMEOUT);
+	notify_notification_set_timeout (notification,
+	                                 timeout > 0 ? timeout*1000 : NOTIFY_EXPIRES_NEVER);
 
 	notify_notification_add_action (notification, "ignore",
 	                                /* TRANSLATORS: don't install updates now */
@@ -344,6 +352,16 @@ main (int   argc,
 
 	gtk_init (&argc, &argv);
 
+	/* Settings */
+
+	gsettings = g_settings_new (GSETTINGS_SCHEMA);
+	if (!g_settings_get_boolean(gsettings, GSETTINGS_KEY_ENABLED))
+	{
+		g_message ("Notification daemon: Disabled");
+		g_object_unref (gsettings);
+		return 0;
+	}
+
 	/* Minimun package kit init. */
 
 	control = pk_control_new ();
@@ -397,6 +415,8 @@ main (int   argc,
 	gtk_main ();
 
 	/* Close main loop. */
+
+	g_object_unref (gsettings);
 
 	g_object_unref (control);
 	g_object_unref (task);

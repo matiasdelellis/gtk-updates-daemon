@@ -21,9 +21,14 @@ GETTEXT_PACKAGE=gtk-updates-daemon
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package.])
 
+# Enable gsettings schema macros
+GLIB_GSETTINGS
+
+#
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 	Makefile
+	data/Makefile
 	src/Makefile
 	po/Makefile.in
 ])

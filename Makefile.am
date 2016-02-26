@@ -1,2 +1,2 @@
-SUBDIRS = src po
+SUBDIRS = data po src
 CLEANFILES = *~

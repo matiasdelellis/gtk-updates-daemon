@@ -1,0 +1,14 @@
+<schemalist gettext-domain="@GETTEXT_PACKAGE@">
+  <schema id="org.gtk.UpdatesDaemon" path="/org/gtk/updates-daemon/">
+    <key name="enabled" type="b">
+      <default>true</default>
+      <_summary>Enable check updates</_summary>
+      <_description>Enable check updates</_description>
+    </key>
+    <key name="notification-timeout" type="i">
+      <default>10</default>
+      <_summary>Notification Timeout</_summary>
+      <_description>Time to showing the notification. Allowed values: 0 (Never close notification) or > 1 number of seconds to show notification.</_description>
+    </key>
+  </schema>
+</schemalist>
