@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([gtk-updates-daemon], [0.1.92], [mati86dl@gmail.com])
+AC_INIT([pk-updates-notifier], [0.1.93], [mati86dl@gmail.com])
 AM_INIT_AUTOMAKE([1.9.6 -Wall -Werror dist-bzip2])
 
 AC_PROG_CC
@@ -17,7 +17,7 @@ PKG_CHECK_MODULES(NOTIFY, [libnotify >= 0.7.6])
 AM_GLIB_GNU_GETTEXT
 IT_PROG_INTLTOOL([0.50.1])
 
-GETTEXT_PACKAGE=gtk-updates-daemon
+GETTEXT_PACKAGE=pk-updates-notifier
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package.])
 

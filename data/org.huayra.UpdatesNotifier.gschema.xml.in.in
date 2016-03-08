@@ -1,5 +1,5 @@
 <schemalist gettext-domain="@GETTEXT_PACKAGE@">
-  <schema id="org.gtk.UpdatesDaemon" path="/org/gtk/updates-daemon/">
+  <schema id="org.huayra.UpdatesNotifier" path="/org/huayra/updates-notifier/">
     <key name="enabled" type="b">
       <default>true</default>
       <_summary>Enable check updates</_summary>

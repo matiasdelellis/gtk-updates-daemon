@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=gtk-updates-daemon
+Name=pk-updates-notifier
 Comment=Checks for updates when start session
-TryExec=gtk-updates-daemon
-Exec=gtk-updates-daemon --daemon
+TryExec=pk-updates-notifier --daemon
+Exec=pk-updates-notifier --daemon
 Icon=software-update-available
 Terminal=false
 Hidden=true

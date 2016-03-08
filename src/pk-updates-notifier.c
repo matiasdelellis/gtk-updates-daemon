@@ -35,7 +35,7 @@
 #define TRESHOLD 3600
 #define BINDIR "/usr/bin"
 
-#define GSETTINGS_SCHEMA "org.gtk.UpdatesDaemon"
+#define GSETTINGS_SCHEMA "org.huayra.UpdatesNotifier"
 #define GSETTINGS_KEY_ENABLED "enabled"
 #define GSETTINGS_KEY_TIMEOUT "notification-timeout"
 
@@ -350,6 +350,7 @@ libnotify_enable_action_cb (NotifyNotification *notification,
 		g_settings_set_boolean(gsettings, GSETTINGS_KEY_ENABLED, TRUE);
 		gud_refresh_package_cache (pktask);
 	}
+	else
 
 	notify_notification_close (notification, NULL);
 }

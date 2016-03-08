@@ -10,4 +10,4 @@ Build deps:
 	* libnotify-dev
 
 Debug:
-	G_MESSAGES_DEBUG=all ./gtk-updates-daemon
+	G_MESSAGES_DEBUG=all ./pk-updates-notifier
