@@ -338,6 +338,12 @@ gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer dat
  */
 
 static void
+on_notification_enable_closed (NotifyNotification *notification, gpointer data)
+{
+	g_object_unref (notification);
+}
+
+static void
 libnotify_enable_action_cb (NotifyNotification *notification,
                             gchar              *action,
                             gpointer            user_data)
@@ -345,14 +351,17 @@ libnotify_enable_action_cb (NotifyNotification *notification,
 	gboolean ret;
 	GError *error = NULL;
 
+	notify_notification_close (notification, NULL);
+
 	if (g_strcmp0 (action, "enable") == 0)
 	{
 		g_settings_set_boolean(gsettings, GSETTINGS_KEY_ENABLED, TRUE);
 		gud_refresh_package_cache (pktask);
 	}
 	else
-
-	notify_notification_close (notification, NULL);
+	{
+		gtk_main_quit ();
+	}
 }
 
 static void
@@ -392,7 +401,7 @@ gud_enable_check_notification (void)
 	                                NULL, NULL);
 
 	g_signal_connect (notification, "closed",
-	                  G_CALLBACK (on_notification_closed), NULL);
+	                  G_CALLBACK (on_notification_enable_closed), NULL);
 
 	ret = notify_notification_show (notification, &error);
 	if (!ret) {
