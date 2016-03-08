@@ -39,9 +39,20 @@
 #define GSETTINGS_KEY_ENABLED "enabled"
 #define GSETTINGS_KEY_TIMEOUT "notification-timeout"
 
+
+PkTask *pktask = NULL;
+
 static GSettings *gsettings = NULL;
 static GudPkProgressBar *progressbar = NULL;
 static GCancellable *cancellable = NULL;
+
+static gboolean edaemon = FALSE;
+
+static GOptionEntry entries[] =
+{
+  { "daemon", 'd', 0, G_OPTION_ARG_NONE, &edaemon, "If enabled notify new updates, without any other user interaction", NULL },
+  { NULL }
+};
 
 static void
 gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer data);
@@ -322,6 +333,73 @@ gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer dat
 		gud_pk_progress_bar_set_percentage (progressbar, percentage);
 	}
 }
+/*
+ * Notification to enable check updates.
+ */
+
+static void
+libnotify_enable_action_cb (NotifyNotification *notification,
+                            gchar              *action,
+                            gpointer            user_data)
+{
+	gboolean ret;
+	GError *error = NULL;
+
+	if (g_strcmp0 (action, "enable") == 0)
+	{
+		g_settings_set_boolean(gsettings, GSETTINGS_KEY_ENABLED, TRUE);
+		gud_refresh_package_cache (pktask);
+	}
+
+	notify_notification_close (notification, NULL);
+}
+
+static void
+gud_enable_check_notification (void)
+{
+	const gchar *title;
+	gboolean ret;
+	GError *error = NULL;
+	GString *string = NULL;
+	guint i, len, timeout;
+	NotifyNotification *notification;
+	PkPackage *item;
+
+	/* find the upgrade string */
+
+	notification = notify_notification_new (_("Software Updates"),
+	                                        _("You want to check for updates?"),
+	                                        "software-update-available");
+
+	notify_notification_set_hint_string (notification, "desktop-entry", "gtk-updates-daemon");
+	notify_notification_set_app_name (notification, _("Software Updates"));
+	notify_notification_set_urgency (notification, NOTIFY_URGENCY_NORMAL);
+
+	timeout = g_settings_get_int (gsettings, GSETTINGS_KEY_TIMEOUT);
+	notify_notification_set_timeout (notification,
+	                                 timeout > 0 ? timeout*1000 : NOTIFY_EXPIRES_NEVER);
+
+	notify_notification_add_action (notification, "enable",
+	                                /* TRANSLATORS: don't install updates now */
+	                                _("Enable"),
+	                                libnotify_enable_action_cb,
+	                                NULL, NULL);
+	notify_notification_add_action (notification, "ignore",
+	                                /* TRANSLATORS: button: open the update viewer to install updates */
+	                                _("Not Now"),
+	                                libnotify_enable_action_cb,
+	                                NULL, NULL);
+
+	g_signal_connect (notification, "closed",
+	                  G_CALLBACK (on_notification_closed), NULL);
+
+	ret = notify_notification_show (notification, &error);
+	if (!ret) {
+		g_warning ("error: %s", error->message);
+		g_error_free (error);
+		gtk_main_quit ();
+	}
+}
 
 /*
  * Main code.
@@ -339,14 +417,30 @@ int
 main (int   argc,
       char *argv[])
 {
+	GOptionContext *context;
 	PkControl *control = NULL;
-	PkTask *task = NULL;
 	GError *error = NULL;
 	guint seconds;
+	gboolean enabled = FALSE;
+
+	/* Translation */
 
 	bindtextdomain (GETTEXT_PACKAGE, GUD_LOCALE_DIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
+
+	/* Parse command line */
+
+	context = g_option_context_new ("- Updates Notificacion Daemon");
+	g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
+	g_option_context_add_group (context, gtk_get_option_group (TRUE));
+	if (!g_option_context_parse (context, &argc, &argv, &error))
+	{
+		g_print ("option parsing failed: %s\n", error->message);
+		exit (1);
+	}
+
+	/* Init */
 
 	notify_init ("gtk-updates-daemon");
 
@@ -355,19 +449,32 @@ main (int   argc,
 	/* Settings */
 
 	gsettings = g_settings_new (GSETTINGS_SCHEMA);
-	if (!g_settings_get_boolean(gsettings, GSETTINGS_KEY_ENABLED))
+
+	/* Command line */
+
+	enabled = g_settings_get_boolean(gsettings, GSETTINGS_KEY_ENABLED);
+
+	if (edaemon) // From command line..
 	{
-		g_message ("Notification daemon: Disabled");
-		g_object_unref (gsettings);
-		return 0;
+		if (!enabled) // From g_settings
+		{
+			g_message ("Updates notification daemon is Disabled.");
+			g_object_unref (gsettings);
+			return 0;
+		}
+	}
+	else
+	{
+		g_message ("Updates notification daemon: Is disabled. Please, change it on notification.");
+		gud_enable_check_notification ();
 	}
 
 	/* Minimun package kit init. */
 
 	control = pk_control_new ();
 
-	task = pk_task_new ();
-	g_object_set (task,
+	pktask = pk_task_new ();
+	g_object_set (pktask,
 	              "background", TRUE,
 	              "interactive", FALSE,
 	              "only-download", TRUE,
@@ -390,24 +497,27 @@ main (int   argc,
 		gud_pk_progress_bar_set_padding (progressbar, 30);
 	}
 
-	/* get the time since the last refresh */
+	if (edaemon) // If daemon just check, outside do it when accept previous notification.
+	{
+		/* get the time since the last refresh */
 
-	seconds = gud_control_get_time_since_action_sync (control,
-	                                                  PK_ROLE_ENUM_REFRESH_CACHE,
-	                                                  cancellable,
-	                                                  &error);
+		seconds = gud_control_get_time_since_action_sync (control,
+		                                                  PK_ROLE_ENUM_REFRESH_CACHE,
+		                                                  cancellable,
+		                                                  &error);
 
-	if (seconds == 0 || error != NULL) {
-		g_warning ("failed to get time: %s", error->message);
-		g_error_free (error);
-		return 0;
-	}
+		if (seconds == 0 || error != NULL) {
+			g_warning ("failed to get time: %s", error->message);
+			g_error_free (error);
+			return 0;
+		}
 
-	if (seconds > TRESHOLD) {
-		gud_refresh_package_cache (task);
-	}
-	else {
-		gud_check_updates (task);
+		if (seconds > TRESHOLD) {
+			gud_refresh_package_cache (pktask);
+		}
+		else {
+			gud_check_updates (pktask);
+		}
 	}
 
 	/* Main loop */
@@ -419,7 +529,7 @@ main (int   argc,
 	g_object_unref (gsettings);
 
 	g_object_unref (control);
-	g_object_unref (task);
+	g_object_unref (pktask);
 
 	g_object_unref (cancellable);
 
