@@ -31,12 +31,12 @@
 #include "gud-sync-helper.h"
 #include "gud-pk-progress-bar.h"
 
-#define TRESHOLD 3600
 #define BINDIR "/usr/bin"
 
 #define GSETTINGS_SCHEMA "org.huayra.UpdatesNotifier"
 #define GSETTINGS_KEY_ENABLED "enabled"
 #define GSETTINGS_KEY_TIMEOUT "notification-timeout"
+#define GSETTINGS_KEY_TRESHOLD "updates-treshold"
 
 /*
  * Main Gobjects.
@@ -444,7 +444,7 @@ main (int   argc,
 	GOptionContext *context;
 	PkControl *control = NULL;
 	GError *error = NULL;
-	guint seconds;
+	guint seconds, treshold;
 	gboolean enabled = FALSE;
 
 	/* Translation */
@@ -522,6 +522,7 @@ main (int   argc,
 	{
 		/* get the time since the last refresh */
 
+		treshold = g_settings_get_int (gsettings, GSETTINGS_KEY_TRESHOLD);
 		seconds = gud_control_get_time_since_action_sync (control,
 		                                                  PK_ROLE_ENUM_REFRESH_CACHE,
 		                                                  cancellable,
@@ -533,7 +534,7 @@ main (int   argc,
 			return 0;
 		}
 
-		if (seconds > TRESHOLD) {
+		if (seconds > treshold) {
 			gud_refresh_package_cache (pktask);
 		}
 		else {

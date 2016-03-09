@@ -10,5 +10,10 @@
       <_summary>Notification Timeout</_summary>
       <_description>Time to showing the notification. Allowed values: 0 (Never close notification) or > 1 number of seconds to show notification.</_description>
     </key>
+    <key name="updates-treshold" type="i">
+      <default>86400</default>
+      <_summary>Treshold to query updates</_summary>
+      <_description>Threshold (On seconds) to check for updates between each login.</_description>
+    </key>
   </schema>
 </schemalist>

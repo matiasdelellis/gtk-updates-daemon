@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([pk-updates-notifier], [0.2.0], [mati86dl@gmail.com])
+AC_INIT([pk-updates-notifier], [0.2.1], [mati86dl@gmail.com])
 AM_INIT_AUTOMAKE([1.9.6 -Wall -Werror dist-bzip2])
 
 AC_PROG_CC

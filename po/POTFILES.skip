@@ -1,3 +1,4 @@
+data/org.huayra.UpdatesNotifier.gschema.xml.in
 src/gud-sync-helper.c
 src/gud-sync-helper.h
 src/gud-pk-progress-bar.c
