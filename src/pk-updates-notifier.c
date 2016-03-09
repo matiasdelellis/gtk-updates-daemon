@@ -25,7 +25,6 @@
 #include <glib-unix.h>
 #include <glib/gi18n.h>
 
-#include <gtk/gtk.h>
 #include <packagekit-glib2/packagekit.h>
 #include <libnotify/notify.h>
 
@@ -39,6 +38,11 @@
 #define GSETTINGS_KEY_ENABLED "enabled"
 #define GSETTINGS_KEY_TIMEOUT "notification-timeout"
 
+/*
+ * Main Gobjects.
+ * TODO: Port to an Gobjects that includes all..
+ */
+GMainLoop *mainloop;
 
 PkTask *pktask = NULL;
 
@@ -46,11 +50,14 @@ static GSettings *gsettings = NULL;
 static GudPkProgressBar *progressbar = NULL;
 static GCancellable *cancellable = NULL;
 
+/*
+ * Command Line parser.
+ */
 static gboolean edaemon = FALSE;
 
 static GOptionEntry entries[] =
 {
-  { "daemon", 'd', 0, G_OPTION_ARG_NONE, &edaemon, "If enabled notify new updates, without any other user interaction", NULL },
+  { "daemon", 'd', 0, G_OPTION_ARG_NONE, &edaemon, "If is enabled on settings notify new updates, without any other user interaction", NULL },
   { NULL }
 };
 
@@ -64,7 +71,7 @@ static void
 on_notification_closed (NotifyNotification *notification, gpointer data)
 {
 	g_object_unref (notification);
-	gtk_main_quit ();
+	g_main_loop_quit (mainloop);
 }
 
 static void
@@ -121,7 +128,7 @@ gud_notfy_updates (GPtrArray *packages)
 	                                        string->str,
 	                                        "software-update-available");
 
-	notify_notification_set_hint_string (notification, "desktop-entry", "gtk-updates-daemon");
+	notify_notification_set_hint_string (notification, "desktop-entry", "pk-updates-notifier");
 	notify_notification_set_app_name (notification, _("Software Updates"));
 	notify_notification_set_urgency (notification, NOTIFY_URGENCY_NORMAL);
 
@@ -147,7 +154,7 @@ gud_notfy_updates (GPtrArray *packages)
 	if (!ret) {
 		g_warning ("error: %s", error->message);
 		g_error_free (error);
-		gtk_main_quit ();
+		g_main_loop_quit (mainloop);
 	}
 }
 
@@ -204,7 +211,7 @@ gud_check_updates_finished (GObject      *object,
 	}
 	else {
 		g_message ("no upgrades\n");
-		gtk_main_quit ();
+		g_main_loop_quit (mainloop);
 	}
 
 out:
@@ -337,10 +344,23 @@ gud_console_progress_cb (PkProgress *progress, PkProgressType type, gpointer dat
  * Notification to enable check updates.
  */
 
+static gboolean dismissed = FALSE;
+
 static void
 on_notification_enable_closed (NotifyNotification *notification, gpointer data)
 {
+	gint close_code = -1;
+	close_code = notify_notification_get_closed_reason(notification);
 	g_object_unref (notification);
+
+	if (close_code == 1) // Timeout..
+	{
+		g_main_loop_quit (mainloop);
+	}
+	if (close_code == 2 && !dismissed) // Dismissed but no specific action..
+	{
+		g_main_loop_quit (mainloop);
+	}
 }
 
 static void
@@ -348,20 +368,14 @@ libnotify_enable_action_cb (NotifyNotification *notification,
                             gchar              *action,
                             gpointer            user_data)
 {
-	gboolean ret;
-	GError *error = NULL;
-
-	notify_notification_close (notification, NULL);
-
 	if (g_strcmp0 (action, "enable") == 0)
 	{
+		dismissed = TRUE;
 		g_settings_set_boolean(gsettings, GSETTINGS_KEY_ENABLED, TRUE);
 		gud_refresh_package_cache (pktask);
 	}
-	else
-	{
-		gtk_main_quit ();
-	}
+
+	notify_notification_close (notification, NULL);
 }
 
 static void
@@ -381,7 +395,7 @@ gud_enable_check_notification (void)
 	                                        _("You want to check for updates?"),
 	                                        "software-update-available");
 
-	notify_notification_set_hint_string (notification, "desktop-entry", "gtk-updates-daemon");
+	notify_notification_set_hint_string (notification, "desktop-entry", "pk-updates-notifier");
 	notify_notification_set_app_name (notification, _("Software Updates"));
 	notify_notification_set_urgency (notification, NOTIFY_URGENCY_NORMAL);
 
@@ -407,7 +421,7 @@ gud_enable_check_notification (void)
 	if (!ret) {
 		g_warning ("error: %s", error->message);
 		g_error_free (error);
-		gtk_main_quit ();
+		g_main_loop_quit (mainloop);
 	}
 }
 
@@ -443,7 +457,6 @@ main (int   argc,
 
 	context = g_option_context_new ("- Updates Notificacion Daemon");
 	g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
-	g_option_context_add_group (context, gtk_get_option_group (TRUE));
 	if (!g_option_context_parse (context, &argc, &argv, &error))
 	{
 		g_print ("option parsing failed: %s\n", error->message);
@@ -452,9 +465,7 @@ main (int   argc,
 
 	/* Init */
 
-	notify_init ("gtk-updates-daemon");
-
-	gtk_init (&argc, &argv);
+	notify_init ("pk-updates-notifier");
 
 	/* Settings */
 
@@ -532,7 +543,9 @@ main (int   argc,
 
 	/* Main loop */
 
-	gtk_main ();
+	mainloop = g_main_loop_new (NULL, FALSE);
+	g_main_loop_run (mainloop);
+	g_main_loop_unref (mainloop);
 
 	/* Close main loop. */
 

@@ -14,12 +14,10 @@ pk_updates_notifier_SOURCES = 	\
 	gud-pk-progress-bar.h
 
 pk_updates_notifier_CFLAGS = \
-	$(GTK_CFLAGS) \
 	$(PACKAGEKIT_CFLAGS) \
 	$(NOTIFY_CFLAGS)
 
 pk_updates_notifier_LDADD = \
-	$(GTK_LIBS) \
 	$(PACKAGEKIT_LIBS) \
 	$(NOTIFY_LIBS)
 

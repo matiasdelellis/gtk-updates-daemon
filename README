@@ -6,7 +6,6 @@ packagekit versions 0.9.4 and 1.0.1 respectively.
 
 Build deps:
 	* libpackagekit-glib-devel
-	* libgtk-3-dev
 	* libnotify-dev
 
 Debug:
