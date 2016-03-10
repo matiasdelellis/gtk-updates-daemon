@@ -449,6 +449,7 @@ main (int   argc,
 
 	/* Translation */
 
+	setlocale (LC_ALL, "");
 	bindtextdomain (GETTEXT_PACKAGE, GUD_LOCALE_DIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
