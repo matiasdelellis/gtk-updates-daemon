@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-03-09 10:56-0300\n"
+"POT-Creation-Date: 2020-10-01 11:51-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,4 +50,12 @@ msgstr ""
 #. TRANSLATORS: don't install updates now
 #: ../src/pk-updates-notifier.c:408
 msgid "Enable"
+msgstr ""
+
+#: ../data/pk-updates-notifier-autostart.desktop.in.h:1
+msgid "Updates notifier"
+msgstr ""
+
+#: ../data/pk-updates-notifier-autostart.desktop.in.h:2
+msgid "Checks for updates when start session"
 msgstr ""

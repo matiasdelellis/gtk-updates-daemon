@@ -1,1 +1,2 @@
 src/pk-updates-notifier.c
+data/pk-updates-notifier-autostart.desktop.in

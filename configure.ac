@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT([pk-updates-notifier], [0.2.2], [mati86dl@gmail.com])
+AC_INIT([pk-updates-notifier], [0.2.3], [mati86dl@gmail.com])
 AM_INIT_AUTOMAKE([1.9.6 -Wall -Werror dist-bzip2])
 
 AC_PROG_CC
@@ -19,6 +19,8 @@ IT_PROG_INTLTOOL([0.50.1])
 GETTEXT_PACKAGE=pk-updates-notifier
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package.])
+
+XDT_I18N([es_AR])
 
 # Enable gsettings schema macros
 GLIB_GSETTINGS

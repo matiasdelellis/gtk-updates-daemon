@@ -1,9 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=pk-updates-notifier
-Comment=Checks for updates when start session
-TryExec=pk-updates-notifier --daemon
+_Name=Updates notifier
+_Comment=Checks for updates when start session
 Exec=pk-updates-notifier --daemon
 Icon=software-update-available
 Terminal=false
-Hidden=true
+Hidden=false
